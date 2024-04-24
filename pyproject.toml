@@ -18,7 +18,7 @@ authors = [{ name = "Jackymancs4" }]
 Homepage = "https://github.com/Jackymancs4/inventree-amazon-plugin"
 
 [project.entry-points."inventree_plugins"]
-inventree-amazon-plugin = "inventree_amazon_plugin:amazon.AmazonPlugin"
+inventree-amazon-plugin = "inventree_amazon_plugin:amazon.ImportAmazonOrdersPlugin"
 
 [tool.isort]
 line_length = 96
