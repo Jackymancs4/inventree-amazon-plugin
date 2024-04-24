@@ -1,6 +1,6 @@
-# inventree-spoolman-plugin
+# inventree-amazon-plugin
 
-[![PyPI](https://img.shields.io/pypi/v/inventree-spoolman-plugin.svg)](https://pypi.org/project/inventree-spoolman-plugin/)
+[![PyPI](https://img.shields.io/pypi/v/inventree-amazon-plugin.svg)](https://pypi.org/project/inventree-amazon-plugin/)
 
 
 
@@ -8,23 +8,23 @@
 
 Install this tool using `pip`:
 ```bash
-pip install inventree-spoolman-plugin
+pip install inventree-amazon-plugin
 ```
 ## Usage
 
 For help, run:
 ```bash
-inventree-spoolman-plugin --help
+inventree-amazon-plugin --help
 ```
 You can also use:
 ```bash
-python -m inventree_spoolman_plugin --help
+python -m inventree_amazon_plugin --help
 ```
 ## Development
 
 To contribute to this tool, first checkout the code. Then create a new virtual environment:
 ```bash
-cd inventree-spoolman-plugin
+cd inventree-amazon-plugin
 python -m venv venv
 source venv/bin/activate
 ```

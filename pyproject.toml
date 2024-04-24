@@ -1,20 +1,31 @@
 [project]
-name = "inventree-spoolman-plugin"
-version = "0.1"
-description = ""
+name = "inventree-amazon-plugin"
+version = "0.2"
+description = "amazon integration for InvenTree"
 readme = "README.md"
-authors = [{name = ""}]
-license = {text = "Apache-2.0"}
 requires-python = ">=3.8"
 classifiers = [
-    "License :: OSI Approved :: Apache Software License"
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Development Status :: 5 - Production/Stable",
+  "Environment :: Plugins",
 ]
-dependencies = [
-    "click"
-]
+keywords = ["inventree", "inventree-plugin", "amazon", "inventree-amazon"]
+license.text = "MIT"
+authors = [{ name = "Jackymancs4" }]
 
-[project.entry-points.console_scripts]
-inventree-spoolman-plugin = "inventree_spoolman_plugin.cli:cli"
+[project.urls]
+Homepage = "https://github.com/Jackymancs4/inventree-amazon-plugin"
 
-[project.optional-dependencies]
-test = ["pytest"]
+[project.entry-points."inventree_plugins"]
+inventree-amazon-plugin = "inventree_amazon_plugin:amazon.AmazonPlugin"
+
+[tool.isort]
+line_length = 96
+lines_after_imports = 1
+multi_line_output = 5
+combine_as_imports = true
+combine_straight_imports = true
+sections = ["FUTURE", "STDLIB", "THIRDPARTY", "INVENTREE", "FIRSTPARTY", "LOCALFOLDER"]
+known_inventree = ["company", "order", "part"]
+known_firstparty = ["plugin"]

@@ -1,5 +1,3 @@
-"""Sample implementation for ActionMixin."""
-
 from decimal import Decimal
 from plugin import InvenTreePlugin
 from plugin.mixins import ActionMixin, APICallMixin, SettingsMixin, EventMixin
@@ -22,11 +20,16 @@ import csv
 
 
 class ImportAmazonOrdersPlugin(ActionMixin, SettingsMixin, InvenTreePlugin):
-    """An EXTREMELY simple action plugin which demonstrates the capability of the ActionMixin class."""
+    """An action plugin which allows to import Amazon orders data export into Inventree."""
 
-    NAME = "ImportAmazonOrdersPlugin"
-    SLUG = "amazon"
-    ACTION_NAME = "amazon"
+    NAME = "AmazonOrdersImport"
+    SLUG = "amazonordersimport"
+    TITLE = "Amazon Import"
+    DESCRIPTION = ("Amazon orders import for InvenTree")
+    VERSION = "0.2"
+    AUTHOR = "Jackymancs4"
+    LICENSE = "MIT"
+    ACTION_NAME = "spoolman"
 
     def get_filenames(self, path_to_zip):
         """return list of filenames inside of the zip folder"""
@@ -66,19 +69,24 @@ class ImportAmazonOrdersPlugin(ActionMixin, SettingsMixin, InvenTreePlugin):
             else:
                 order = order_map[order_id]
 
-            part = Part.objects.get_or_create(
-                name=part_name,
-                description=part_description,
-            )[0]
+            supplier_part = SupplierPart.objects.filter(supplier=supplier, SKU=part_code).first()
 
-            supplier_part = SupplierPart.objects.get_or_create(
-                part=part, supplier=supplier, SKU=part_code
-            )[0]
+            if not supplier_part: 
 
-            supplier_part.link = "https://" + row[0] + "/dp/" + part_code
-            supplier_part.save()
+                part = Part.objects.get_or_create(
+                    name=part_name,
+                    description=part_description,
+                )[0]
 
-            # order.add_line_item(supplier_part,)
+                supplier_part = SupplierPart.objects.get_or_create(
+                    part=part, supplier=supplier, SKU=part_code
+                )[0]
+
+                supplier_part.link = "https://" + row[0] + "/dp/" + part_code
+                supplier_part.save()
+
+            else:
+                part = Part.objects.get(pk=supplier_part.part)
 
             order_line_item = PurchaseOrderLineItem.objects.get_or_create(
                 order=order,
@@ -126,48 +134,42 @@ class ImportAmazonOrdersPlugin(ActionMixin, SettingsMixin, InvenTreePlugin):
         line_count += 1
 
     def perform_action(self, user=None, data=None):
-        """Sample method."""
-        print("Action plugin in action!")
 
-        zip_temp_file = NamedTemporaryFile(delete=True)
+        command = data.get("command")
 
-        zip_temp_file_map = {}
+        if command == "import_base64":
 
-        zip_temp_file.write(base64.b64decode(data["aaa"]))
+            zip_temp_file = NamedTemporaryFile(delete=True)
 
-        print(zip_temp_file.name)
+            zip_temp_file_map = {}
 
-        company = Company.objects.get_or_create(
-            name="Amazon",
-            is_supplier=True,
-        )[0]
+            zip_temp_file.write(base64.b64decode(data["data"]))
 
-        with ZipFile(zip_temp_file.name, "r") as zip:
+            company = Company.objects.get_or_create(
+                name="Amazon",
+                is_supplier=True,
+            )[0]
 
-            for zip_file_name in zip.namelist():
-                zip_file_content = zip.read(zip_file_name)
+            with ZipFile(zip_temp_file.name, "r") as zip:
 
-                zip_temp_file_map[zip_file_name] = NamedTemporaryFile(delete=True)
-                zip_temp_file_map[zip_file_name].write(zip_file_content)
+                for zip_file_name in zip.namelist():
+                    zip_file_content = zip.read(zip_file_name)
 
-                if zip_file_name == "Retail.OrderHistory.2/Retail.OrderHistory.2.csv":
+                    zip_temp_file_map[zip_file_name] = NamedTemporaryFile(delete=True)
+                    zip_temp_file_map[zip_file_name].write(zip_file_content)
 
-                    csv_reader = csv.reader(
-                        zip_file_content.decode().splitlines(),
-                        delimiter=",",
-                        lineterminator="\n",
-                    )
+                    if zip_file_name == "Retail.OrderHistory.2/Retail.OrderHistory.2.csv":
 
-                    orders = self.process_order_history(csv_reader, company)
+                        csv_reader = csv.reader(
+                            zip_file_content.decode().splitlines(),
+                            delimiter=",",
+                            lineterminator="\n",
+                        )
 
-                    self.place_orders(orders, user)
+                        orders = self.process_order_history(csv_reader, company)
 
-                    self.complete_orders(orders, user)
+                        self.place_orders(orders, user)
 
-    def get_info(self, user, data=None):
-        """Sample method."""
-        return {"user": user.username, "hello": "world"}
-
-    def get_result(self, user=None, data=None):
-        """Sample method."""
-        return True
+                        self.complete_orders(orders, user)
+        else:
+            self.result = {"error"}
