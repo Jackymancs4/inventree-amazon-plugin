@@ -29,7 +29,7 @@ class ImportAmazonOrdersPlugin(ActionMixin, SettingsMixin, InvenTreePlugin):
     VERSION = "0.2"
     AUTHOR = "Jackymancs4"
     LICENSE = "MIT"
-    ACTION_NAME = "spoolman"
+    ACTION_NAME = "amazon"
 
     def get_filenames(self, path_to_zip):
         """return list of filenames inside of the zip folder"""
@@ -86,7 +86,7 @@ class ImportAmazonOrdersPlugin(ActionMixin, SettingsMixin, InvenTreePlugin):
                 supplier_part.save()
 
             else:
-                part = Part.objects.get(pk=supplier_part.part)
+                part = supplier_part.part
 
             order_line_item = PurchaseOrderLineItem.objects.get_or_create(
                 order=order,
@@ -143,7 +143,7 @@ class ImportAmazonOrdersPlugin(ActionMixin, SettingsMixin, InvenTreePlugin):
 
             zip_temp_file_map = {}
 
-            zip_temp_file.write(base64.b64decode(data["data"]))
+            zip_temp_file.write(base64.b64decode(data["content"]))
 
             company = Company.objects.get_or_create(
                 name="Amazon",
