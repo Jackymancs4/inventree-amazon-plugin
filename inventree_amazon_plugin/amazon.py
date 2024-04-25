@@ -26,7 +26,7 @@ class ImportAmazonOrdersPlugin(ActionMixin, SettingsMixin, InvenTreePlugin):
     SLUG = "amazonordersimport"
     TITLE = "Amazon Import"
     DESCRIPTION = ("Amazon orders import for InvenTree")
-    VERSION = "0.3.2"
+    VERSION = "0.3.3"
     AUTHOR = "Jackymancs4"
     LICENSE = "MIT"
     ACTION_NAME = "amazon"
@@ -35,6 +35,16 @@ class ImportAmazonOrdersPlugin(ActionMixin, SettingsMixin, InvenTreePlugin):
         """return list of filenames inside of the zip folder"""
         with ZipFile(path_to_zip, "r") as zip:
             return zip.namelist()
+
+    def validate_date(self, date_string):
+        date = None
+
+        try:
+            date = datetime.fromisoformat(date_string)
+        except:
+            print('Invalid date: ' + date_string)
+
+        return date
 
     def get_part_name(self, part_name):
         return (part_name[:50] + "..") if len(part_name) > 50 else part_name
@@ -45,7 +55,9 @@ class ImportAmazonOrdersPlugin(ActionMixin, SettingsMixin, InvenTreePlugin):
     def process_order(self, order_data, supplier):
 
             order_id = order_data[1]
-            order_date = datetime.fromisoformat(order_data[2])
+            order_date = self.validate_date(order_data[2])
+            order_issue_date = order_date
+            order_completed_date = self.validate_date(order_data[18])
 
             part_name = self.get_part_name(order_data[23])
             part_description = self.get_part_description(order_data[23])
@@ -67,7 +79,8 @@ class ImportAmazonOrdersPlugin(ActionMixin, SettingsMixin, InvenTreePlugin):
                 )[0]
 
                 order.creation_date=order_date,
-                # order.issue_date=order_date,
+                order.issue_date=order_issue_date,
+                order.complete_date=order_completed_date,
 
                 order.save()
 
@@ -140,14 +153,19 @@ class ImportAmazonOrdersPlugin(ActionMixin, SettingsMixin, InvenTreePlugin):
 
         line_count = 0
 
-        for order in data:
+        for order_id in data:
 
-            data[order].place_order()
+            order_issue_date = data[order_id].issue_date
 
-            pending_lines = data[order].pending_line_items()
+            data[order_id].place_order()
+
+            data[order_id].issue_date=order_issue_date,
+            data[order_id].save()
+
+            pending_lines = data[order_id].pending_line_items()
 
             for pending_line in pending_lines:
-                data[order].receive_line_item(
+                data[order_id].receive_line_item(
                     pending_line, default_location, pending_line.quantity, user
                 )
 
@@ -157,9 +175,13 @@ class ImportAmazonOrdersPlugin(ActionMixin, SettingsMixin, InvenTreePlugin):
     def complete_orders(self, data, user, default_location=None):
 
         line_count = 0
-        for order in data:
+        for order_id in data:
 
-            data[order].complete_order()
+            order_complete_date = data[order_id].complete_date
+            data[order_id].complete_order()
+
+            data[order_id].complete_date=order_complete_date,
+            data[order_id].save()
 
         print(f"Processed {line_count} lines.")
         line_count += 1
