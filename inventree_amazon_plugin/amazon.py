@@ -62,7 +62,6 @@ class ImportAmazonOrdersPlugin(ActionMixin, SettingsMixin, InvenTreePlugin):
                     supplier=supplier,
                     supplier_reference=order_id,
                     creation_date=order_date,
-                    issue_date=order_date,
                 )[0]
 
                 order_map[order_id] = order
