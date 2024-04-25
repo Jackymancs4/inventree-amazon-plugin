@@ -26,7 +26,7 @@ class ImportAmazonOrdersPlugin(ActionMixin, SettingsMixin, InvenTreePlugin):
     SLUG = "amazonordersimport"
     TITLE = "Amazon Import"
     DESCRIPTION = ("Amazon orders import for InvenTree")
-    VERSION = "0.3.1"
+    VERSION = "0.3.2"
     AUTHOR = "Jackymancs4"
     LICENSE = "MIT"
     ACTION_NAME = "amazon"
@@ -101,6 +101,8 @@ class ImportAmazonOrdersPlugin(ActionMixin, SettingsMixin, InvenTreePlugin):
                 1 if Decimal(part_quantity) == 0.0 else Decimal(part_quantity)
             )
             order_line_item.save()
+
+            return order
 
     def process_order_history(self, data, supplier):
 
