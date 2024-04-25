@@ -36,46 +36,38 @@ class ImportAmazonOrdersPlugin(ActionMixin, SettingsMixin, InvenTreePlugin):
         with ZipFile(path_to_zip, "r") as zip:
             return zip.namelist()
 
-    def process_order_history(self, data, supplier):
+    def get_part_name(self, part_name):
+        return (part_name[:50] + "..") if len(part_name) > 50 else part_name
 
-        print("Initiate import")
+    def get_part_description(self, part_name):
+        return part_name if len(part_name) > 50 else ""
 
-        order_map = {}
+    def process_order(self, order_data, supplier):
 
-        line_count = 0
-        for row in data:
-            if line_count == 0:
-                line_count += 1
-                continue
+            order_id = order_data[1]
+            order_date = datetime.fromisoformat(order_data[2])
 
-            order_id = row[1]
-            order_date = datetime.fromisoformat(row[2])
+            part_name = self.get_part_name(order_data[23])
+            part_description = self.get_part_description(order_data[23])
 
-            part_name = (row[23][:50] + "..") if len(row[23]) > 50 else row[23]
-            part_code = row[12]
-            part_description = row[23] if len(row[23]) > 50 else ""
-            part_quantity = row[14]
-            part_total_price = row[9]
-            part_price_currency = row[4]
+            part_code = order_data[12]
 
-            if order_id not in order_map:
+            part_quantity = order_data[14]
+            part_total_price = order_data[9]
+            part_price_currency = order_data[4]
 
-                order = PurchaseOrder.objects.filter(supplier=supplier, supplier_reference=order_id).first()
+            order = PurchaseOrder.objects.filter(supplier=supplier, supplier_reference=order_id).first()
 
-                if not order:
-                    print("Order not found by reference: " + order_id)
+            if not order:
+                print("Order not found by reference: " + order_id)
 
-                    order = PurchaseOrder.objects.get_or_create(
-                        supplier=supplier,
-                        supplier_reference=order_id,
-                    )[0]
+                order = PurchaseOrder.objects.get_or_create(
+                    supplier=supplier,
+                    supplier_reference=order_id,
+                )[0]
 
-                    order.creation_date=order_date,
-                    order.save()
-
-                order_map[order_id] = order
-            else:
-                order = order_map[order_id]
+                order.creation_date=order_date,
+                order.save()
 
             supplier_part = SupplierPart.objects.filter(supplier=supplier, SKU=part_code).first()
 
@@ -90,7 +82,7 @@ class ImportAmazonOrdersPlugin(ActionMixin, SettingsMixin, InvenTreePlugin):
                     part=part, supplier=supplier, SKU=part_code
                 )[0]
 
-                supplier_part.link = "https://" + row[0] + "/dp/" + part_code
+                supplier_part.link = "https://" + order_data[0] + "/dp/" + part_code
                 supplier_part.save()
 
             else:
@@ -108,8 +100,34 @@ class ImportAmazonOrdersPlugin(ActionMixin, SettingsMixin, InvenTreePlugin):
             )
             order_line_item.save()
 
+    def process_order_history(self, data, supplier):
+
+        print("Initiate import 2")
+
+        order_map = {}
+
+        line_count = 0
+        processed_line_count = 0
+
+        for row in data:
+
+            # Skip header line
+            if line_count == 0:
+                line_count += 1
+                continue
+
+            try:
+
+                order = self.process_order(row, supplier)
+                order_map[order.pk] = order
+                processed_line_count += 1
+
+            except:
+                print("Error import: " + row[1])
+            
+            line_count += 1
+
         print(f"Processed {line_count} lines.")
-        line_count += 1
 
         return order_map
 
