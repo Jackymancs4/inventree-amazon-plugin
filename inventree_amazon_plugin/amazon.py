@@ -61,8 +61,10 @@ class ImportAmazonOrdersPlugin(ActionMixin, SettingsMixin, InvenTreePlugin):
                 order = PurchaseOrder.objects.get_or_create(
                     supplier=supplier,
                     supplier_reference=order_id,
-                    creation_date=order_date,
                 )[0]
+
+                order.creation_date=order_date,
+                order.save()
 
                 order_map[order_id] = order
             else:
