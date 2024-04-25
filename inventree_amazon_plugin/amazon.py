@@ -58,13 +58,18 @@ class ImportAmazonOrdersPlugin(ActionMixin, SettingsMixin, InvenTreePlugin):
 
             if order_id not in order_map:
 
-                order = PurchaseOrder.objects.get_or_create(
-                    supplier=supplier,
-                    supplier_reference=order_id,
-                )[0]
+                order = PurchaseOrder.objects.filter(supplier=supplier, supplier_reference=order_id).first()
 
-                order.creation_date=order_date,
-                order.save()
+                if not order:
+                    print("Order not found by reference: " + order_id)
+
+                    order = PurchaseOrder.objects.get_or_create(
+                        supplier=supplier,
+                        supplier_reference=order_id,
+                    )[0]
+
+                    order.creation_date=order_date,
+                    order.save()
 
                 order_map[order_id] = order
             else:
