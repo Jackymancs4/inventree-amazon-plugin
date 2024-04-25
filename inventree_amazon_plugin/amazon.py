@@ -26,7 +26,7 @@ class ImportAmazonOrdersPlugin(ActionMixin, SettingsMixin, InvenTreePlugin):
     SLUG = "amazonordersimport"
     TITLE = "Amazon Import"
     DESCRIPTION = ("Amazon orders import for InvenTree")
-    VERSION = "0.3"
+    VERSION = "0.3.1"
     AUTHOR = "Jackymancs4"
     LICENSE = "MIT"
     ACTION_NAME = "amazon"
