@@ -67,6 +67,8 @@ class ImportAmazonOrdersPlugin(ActionMixin, SettingsMixin, InvenTreePlugin):
                 )[0]
 
                 order.creation_date=order_date,
+                # order.issue_date=order_date,
+
                 order.save()
 
             supplier_part = SupplierPart.objects.filter(supplier=supplier, SKU=part_code).first()
@@ -102,7 +104,7 @@ class ImportAmazonOrdersPlugin(ActionMixin, SettingsMixin, InvenTreePlugin):
 
     def process_order_history(self, data, supplier):
 
-        print("Initiate import 2")
+        print("Initiate import 3")
 
         order_map = {}
 
@@ -116,14 +118,15 @@ class ImportAmazonOrdersPlugin(ActionMixin, SettingsMixin, InvenTreePlugin):
                 line_count += 1
                 continue
 
-            try:
+            #try:
 
-                order = self.process_order(row, supplier)
-                order_map[order.pk] = order
-                processed_line_count += 1
+            order = self.process_order(row, supplier)
+            order_map[order.pk] = order
+            processed_line_count += 1
+            print("Successful import: " + row[1])
 
-            except:
-                print("Error import: " + row[1])
+            # except:
+            #    print("Error import: " + row[1])
             
             line_count += 1
 
