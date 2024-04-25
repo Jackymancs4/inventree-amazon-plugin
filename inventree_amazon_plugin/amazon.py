@@ -38,6 +38,8 @@ class ImportAmazonOrdersPlugin(ActionMixin, SettingsMixin, InvenTreePlugin):
 
     def process_order_history(self, data, supplier):
 
+        print("Initiate import")
+
         order_map = {}
 
         line_count = 0
